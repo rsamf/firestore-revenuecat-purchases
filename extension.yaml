@@ -101,14 +101,22 @@ params:
       What is the path to the Cloud Firestore collection where the extension should store RevenueCat customer details?
       This can be the location of an existing user collection, the extension will not overwrite your existing data but rather merge the RevenueCat data into your existing firestore documents.
       Leave empty if you do not want the extension to store RevenueCat customer details.
-
-      It supports placeholders for app_user_id, for example:
-      users/{app_user_id}/purchaser-info
-      Will save the purchaser-info on a document named also "{app_user_id}" under the subcollection "purchaser-info"
-
-      (You can later modify this value in Google Firestore > Extensions > Extension Configuration > Reconfigure extension)
     validationRegex: "^[^/]+(/[^/]+/[^/]+)*$"
     validationErrorMessage: Firestore collection paths must be an odd number of segments separated by slashes, e.g. "path/to/collection".
+    required: false
+  - param: REVENUECAT_CUSTOMERS_FIELD
+    label: Field name to place customer details
+    description: >-
+      What is the field name where the extension should store RevenueCat customer details within the customer document?
+      Leave empty if you do not want the extension to store RevenueCat customer details.
+    required: false
+  - param: DATABASE_URL
+    label: Firebase Realtime Database URL
+    description: >-
+      What is the URL of your Firebase Realtime Database?
+      Leave empty to use the default database by default.
+    example: https://my-app.nam5.firebaseio.com
+    validationRegex: "^https://[^/]+\\.firebaseio\\.com$"
     required: false
   - param: SET_CUSTOM_CLAIMS
     label: Should custom claims be set in Firebase Auth with the user's active entitlements?

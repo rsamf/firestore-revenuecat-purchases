@@ -10,7 +10,6 @@ import { validateApiVersion } from "./validate-api-version";
 import { getEventarc } from "firebase-admin/eventarc";
 import { Auth } from "firebase-admin/lib/auth/auth";
 
-admin.initializeApp();
 
 const eventChannel = process.env.EVENTARC_CHANNEL
   ? getEventarc().channel(process.env.EVENTARC_CHANNEL, {
@@ -25,24 +24,24 @@ const EVENTS_COLLECTION = process.env.REVENUECAT_EVENTS_COLLECTION as
 const CUSTOMERS_COLLECTION = process.env.REVENUECAT_CUSTOMERS_COLLECTION as
   | string
   | undefined;
+const CUSTOMERS_FIELD = process.env.REVENUECAT_CUSTOMERS_FIELD as
+  | string
+  | undefined;
 const SET_CUSTOM_CLAIMS = process.env.SET_CUSTOM_CLAIMS as
   | "ENABLED"
   | "DISABLED";
+const DATABASE_URL = process.env.DATABASE_URL as
+  | string
+  | undefined;
 const EXTENSION_VERSION = process.env.EXTENSION_VERSION || "0.1.17";
 
-const getCustomersCollection = ({
-  firestore,
-  customersCollectionConfig,
-  userId,
-}: {
-  firestore: admin.firestore.Firestore;
-  customersCollectionConfig: string;
-  userId: string;
-}) => {
-  return firestore.collection(
-    customersCollectionConfig.replace("{app_user_id}", userId)
-  );
-};
+if (DATABASE_URL === undefined) {
+    admin.initializeApp();
+} else {
+    admin.initializeApp({
+        databaseURL: DATABASE_URL
+    });
+}
 
 const writeToCollection = async ({
   firestore,
@@ -57,19 +56,19 @@ const writeToCollection = async ({
   customerPayload: BodyPayload["customer_info"];
   aliases: string[];
 }) => {
-  const customersCollection = getCustomersCollection({
-    firestore,
-    customersCollectionConfig,
-    userId,
-  });
+
+  const customersCollection = firestore.collection(customersCollectionConfig);
+  const field = CUSTOMERS_FIELD;
 
   const payloadToWrite = {
     ...customerPayload,
     aliases,
   };
 
-  await customersCollection.doc(userId).set(payloadToWrite, { merge: true });
-  await customersCollection.doc(userId).update(payloadToWrite);
+  const data = field ? { [field]: payloadToWrite } : payloadToWrite;
+
+  await customersCollection.doc(userId).set(data, { merge: true });
+  await customersCollection.doc(userId).update(data);
 };
 
 const getActiveEntitlements = ({
